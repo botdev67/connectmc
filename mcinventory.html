@@ -1,0 +1,1380 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Resource Inventory</title>
+
+    <style>
+        * {
+            box-sizing: border-box;
+        }
+
+        body {
+            margin: 0;
+            font-family: Arial, sans-serif;
+            background: #111827;
+            color: white;
+        }
+
+        header {
+            background: #1f2937;
+            border-bottom: 1px solid #374151;
+            padding: 25px;
+            text-align: center;
+        }
+
+        header h1 {
+            margin: 0;
+            font-size: 32px;
+        }
+
+        header p {
+            color: #9ca3af;
+            margin: 8px 0 0;
+        }
+
+        .container {
+            max-width: 950px;
+            margin: 35px auto;
+            padding: 20px;
+        }
+
+        .card {
+            background: #1f2937;
+            border: 1px solid #374151;
+            border-radius: 14px;
+            padding: 25px;
+            margin-bottom: 20px;
+        }
+
+        .card h2 {
+            margin-top: 0;
+        }
+
+        /* ITEM PICKER */
+
+        .picker {
+            position: relative;
+        }
+
+        .picker-button {
+            width: 100%;
+            padding: 14px;
+            border-radius: 9px;
+            border: 1px solid #4b5563;
+            background: #111827;
+            color: white;
+            text-align: left;
+            font-size: 16px;
+            cursor: pointer;
+        }
+
+        .picker-button:hover {
+            border-color: #2563eb;
+        }
+
+        .picker-menu {
+            display: none;
+            position: absolute;
+            z-index: 100;
+            left: 0;
+            right: 0;
+            top: 58px;
+            background: #111827;
+            border: 1px solid #4b5563;
+            border-radius: 10px;
+            padding: 10px;
+            box-shadow: 0 15px 35px rgba(0,0,0,0.45);
+        }
+
+        .picker-menu.open {
+            display: block;
+        }
+
+        .search {
+            width: 100%;
+            padding: 12px;
+            border-radius: 8px;
+            border: 1px solid #4b5563;
+            background: #1f2937;
+            color: white;
+            outline: none;
+            margin-bottom: 10px;
+        }
+
+        .item-list {
+            max-height: 350px;
+            overflow-y: auto;
+        }
+
+        .item-option {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            width: 100%;
+            padding: 10px;
+            background: transparent;
+            border: none;
+            border-radius: 7px;
+            color: white;
+            text-align: left;
+            cursor: pointer;
+        }
+
+        .item-option:hover {
+            background: #374151;
+        }
+
+        .item-icon {
+            width: 36px;
+            height: 36px;
+            image-rendering: pixelated;
+            object-fit: contain;
+            flex-shrink: 0;
+        }
+
+        .item-info {
+            display: flex;
+            flex-direction: column;
+            min-width: 0;
+        }
+
+        .item-name {
+            font-weight: bold;
+        }
+
+        .item-id {
+            font-size: 12px;
+            color: #9ca3af;
+        }
+
+        /* QUANTITY */
+
+        .quantity-row {
+            display: grid;
+            grid-template-columns: 1fr 160px auto;
+            gap: 10px;
+            margin-top: 15px;
+        }
+
+        input {
+            width: 100%;
+            padding: 13px;
+            border-radius: 8px;
+            border: 1px solid #4b5563;
+            background: #111827;
+            color: white;
+            font-size: 15px;
+            outline: none;
+        }
+
+        input:focus {
+            border-color: #2563eb;
+        }
+
+        button {
+            border: none;
+            border-radius: 8px;
+            color: white;
+            font-weight: bold;
+            cursor: pointer;
+        }
+
+        .add-button {
+            background: #2563eb;
+            padding: 13px 20px;
+        }
+
+        .add-button:hover {
+            background: #1d4ed8;
+        }
+
+        /* INVENTORY */
+
+        .inventory {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+
+        .resource {
+            display: grid;
+            grid-template-columns: 42px 50px 1fr 120px 90px;
+            align-items: center;
+            gap: 12px;
+            padding: 13px;
+            background: #111827;
+            border: 1px solid #374151;
+            border-radius: 10px;
+        }
+
+        .resource.completed {
+            opacity: 0.55;
+        }
+
+        .resource.completed .resource-name {
+            text-decoration: line-through;
+        }
+
+        .resource-image {
+            width: 38px;
+            height: 38px;
+            image-rendering: pixelated;
+            object-fit: contain;
+        }
+
+        .check {
+            width: 28px;
+            height: 28px;
+            border: 2px solid #6b7280;
+            background: transparent;
+            border-radius: 6px;
+            font-size: 18px;
+        }
+
+        .check.checked {
+            background: #16a34a;
+            border-color: #16a34a;
+        }
+
+        .resource-name {
+            font-weight: bold;
+        }
+
+        .quantity {
+            color: #9ca3af;
+        }
+
+        .delete-button {
+            background: #374151;
+            padding: 9px 12px;
+        }
+
+        .delete-button:hover {
+            background: #4b5563;
+        }
+
+        .empty {
+            text-align: center;
+            padding: 30px;
+            color: #9ca3af;
+        }
+
+        /* STATS */
+
+        .stats {
+            display: flex;
+            justify-content: space-between;
+            margin-top: 20px;
+            color: #9ca3af;
+        }
+
+        .progress-container {
+            margin-top: 15px;
+            height: 10px;
+            background: #374151;
+            border-radius: 10px;
+            overflow: hidden;
+        }
+
+        .progress-bar {
+            height: 100%;
+            width: 0%;
+            background: #16a34a;
+            transition: width 0.25s;
+        }
+
+        .clear-button {
+            background: #dc2626;
+            padding: 11px 16px;
+            margin-top: 15px;
+        }
+
+        .clear-button:hover {
+            background: #b91c1c;
+        }
+
+        /* IMAGE FALLBACK */
+
+        .icon-fallback {
+            width: 36px;
+            height: 36px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #6b7280;
+            font-size: 22px;
+            flex-shrink: 0;
+        }
+
+        /* MOBILE */
+
+        @media (max-width: 700px) {
+
+            .quantity-row {
+                grid-template-columns: 1fr;
+            }
+
+            .resource {
+                grid-template-columns: 35px 40px 1fr;
+            }
+
+            .quantity,
+            .delete-button {
+                grid-column: 3;
+            }
+
+            .stats {
+                flex-direction: column;
+                gap: 8px;
+            }
+        }
+    </style>
+</head>
+
+<body>
+
+<header>
+    <h1>📦 Resource Inventory</h1>
+    <p>Pick Minecraft items and track what you need.</p>
+</header>
+
+<div class="container">
+
+    <div class="card">
+
+        <h2>➕ Add Resource</h2>
+
+        <div class="picker">
+
+            <button
+                class="picker-button"
+                id="pickerButton"
+                onclick="togglePicker()"
+            >
+                Select a Minecraft item...
+            </button>
+
+            <div class="picker-menu" id="pickerMenu">
+
+                <input
+                    class="search"
+                    id="itemSearch"
+                    type="text"
+                    placeholder="🔎 Search items..."
+                    oninput="filterItems()"
+                >
+
+                <div class="item-list" id="itemList"></div>
+
+            </div>
+
+        </div>
+
+        <div class="quantity-row">
+
+            <input
+                type="number"
+                id="quantity"
+                min="1"
+                value="1"
+                placeholder="Quantity"
+            >
+
+            <button
+                class="add-button"
+                onclick="addSelectedItem()"
+            >
+                Add Item
+            </button>
+
+        </div>
+
+    </div>
+
+
+    <div class="card">
+
+        <h2>📋 Your Resources</h2>
+
+        <div class="inventory" id="inventory"></div>
+
+        <div class="stats">
+            <span id="totalText">0 resources</span>
+            <span id="completedText">0 completed</span>
+        </div>
+
+        <div class="progress-container">
+            <div
+                class="progress-bar"
+                id="progressBar"
+            ></div>
+        </div>
+
+        <button
+            class="clear-button"
+            onclick="clearInventory()"
+        >
+            Clear All
+        </button>
+
+    </div>
+
+</div>
+
+
+<script>
+
+/*
+===========================================================
+ Minecraft 1.21.11 RESOURCE INVENTORY
+===========================================================
+
+ Item database:
+ PrismarineJS minecraft-data 1.21.11
+
+ Textures:
+ MC Assets 1.21.11
+
+ IMPORTANT:
+ Minecraft 1.21.11 has separate:
+
+   textures/item/
+   textures/block/
+
+ We first try the item texture.
+
+ If it does not exist, we try the block texture.
+
+ This fixes blocks and items such as:
+
+   diamond
+   emerald
+   iron_ingot
+   diamond_block
+   stone
+   grass_block
+   etc.
+===========================================================
+*/
+
+
+/* ========================================================
+   DATA
+======================================================== */
+
+const ITEM_DATA_URL =
+    "https://raw.githubusercontent.com/PrismarineJS/minecraft-data/master/data/pc/1.21.11/items.json";
+
+
+/*
+    Official Minecraft asset browser for 1.21.11:
+
+    https://mcasset.cloud/1.21.11/assets/minecraft/textures/item/
+    https://mcasset.cloud/1.21.11/assets/minecraft/textures/block/
+
+    The raw image URL format used below is:
+
+    https://mcasset.cloud/1.21.11/assets/minecraft/textures/item/<name>.png
+
+    OR
+
+    https://mcasset.cloud/1.21.11/assets/minecraft/textures/block/<name>.png
+*/
+
+
+const ITEM_TEXTURE_BASE =
+    "https://mcasset.cloud/1.21.11/assets/minecraft/textures/item/";
+
+const BLOCK_TEXTURE_BASE =
+    "https://mcasset.cloud/1.21.11/assets/minecraft/textures/block/";
+
+
+let minecraftItems = [];
+let selectedItem = null;
+
+let resources =
+    JSON.parse(localStorage.getItem("minecraftResources")) || [];
+
+
+/* ========================================================
+   TEXTURE CACHE
+======================================================== */
+
+/*
+    Stores the working texture URL for every item.
+
+    This prevents the browser from repeatedly testing
+    the same broken URL.
+*/
+
+const textureCache = {};
+
+
+/* ========================================================
+   LOAD ITEMS
+======================================================== */
+
+async function loadItems() {
+
+    const list =
+        document.getElementById("itemList");
+
+    list.innerHTML =
+        "<div class='empty'>Loading Minecraft items...</div>";
+
+    try {
+
+        const response =
+            await fetch(ITEM_DATA_URL);
+
+        if (!response.ok) {
+            throw new Error(
+                "Could not load Minecraft 1.21.11 item data."
+            );
+        }
+
+        minecraftItems =
+            await response.json();
+
+
+        /*
+            Air isn't useful in a resource inventory,
+            so remove it.
+        */
+
+        minecraftItems =
+            minecraftItems.filter(
+                item => item.name !== "air"
+            );
+
+
+        /*
+            Sort alphabetically by display name.
+        */
+
+        minecraftItems.sort(
+            (a, b) =>
+                a.displayName.localeCompare(
+                    b.displayName
+                )
+        );
+
+
+        renderItemPicker(minecraftItems);
+
+    } catch (error) {
+
+        list.innerHTML = `
+            <div class="empty">
+                Unable to load Minecraft items.<br><br>
+                Check your internet connection.
+            </div>
+        `;
+
+        console.error(error);
+    }
+}
+
+
+/* ========================================================
+   PICKER
+======================================================== */
+
+function togglePicker() {
+
+    const menu =
+        document.getElementById("pickerMenu");
+
+    menu.classList.toggle("open");
+
+    if (menu.classList.contains("open")) {
+
+        document
+            .getElementById("itemSearch")
+            .focus();
+    }
+}
+
+
+/* ========================================================
+   RENDER PICKER
+======================================================== */
+
+function renderItemPicker(items) {
+
+    const list =
+        document.getElementById("itemList");
+
+    list.innerHTML = "";
+
+    if (items.length === 0) {
+
+        list.innerHTML =
+            "<div class='empty'>No items found.</div>";
+
+        return;
+    }
+
+
+    const fragment =
+        document.createDocumentFragment();
+
+
+    items.forEach(item => {
+
+        const button =
+            document.createElement("button");
+
+        button.className =
+            "item-option";
+
+
+        /*
+            Create texture element.
+        */
+
+        const icon =
+            createMinecraftIcon(
+                item.name,
+                item.displayName,
+                "item-icon"
+            );
+
+
+        const info =
+            document.createElement("div");
+
+        info.className =
+            "item-info";
+
+
+        const name =
+            document.createElement("span");
+
+        name.className =
+            "item-name";
+
+        name.textContent =
+            item.displayName;
+
+
+        const id =
+            document.createElement("span");
+
+        id.className =
+            "item-id";
+
+        id.textContent =
+            item.name;
+
+
+        info.appendChild(name);
+        info.appendChild(id);
+
+
+        button.appendChild(icon);
+        button.appendChild(info);
+
+
+        button.onclick =
+            function() {
+
+                selectItem(item);
+
+            };
+
+
+        fragment.appendChild(button);
+
+    });
+
+
+    list.appendChild(fragment);
+}
+
+
+/* ========================================================
+   FILTER
+======================================================== */
+
+function filterItems() {
+
+    const search =
+        document
+            .getElementById("itemSearch")
+            .value
+            .toLowerCase()
+            .trim();
+
+
+    const filtered =
+        minecraftItems.filter(item => {
+
+            return (
+                item.displayName
+                    .toLowerCase()
+                    .includes(search)
+
+                ||
+
+                item.name
+                    .toLowerCase()
+                    .includes(search)
+            );
+
+        });
+
+
+    renderItemPicker(filtered);
+}
+
+
+/* ========================================================
+   SELECT ITEM
+======================================================== */
+
+function selectItem(item) {
+
+    selectedItem = item;
+
+
+    document
+        .getElementById("pickerButton")
+        .textContent =
+        "🧱 " + item.displayName;
+
+
+    document
+        .getElementById("pickerMenu")
+        .classList.remove("open");
+
+
+    document
+        .getElementById("itemSearch")
+        .value = "";
+}
+
+
+/* ========================================================
+   1.21.11 TEXTURE MAPPING
+======================================================== */
+
+/*
+    This is the important part.
+
+    Minecraft 1.21.11 separates item and block
+    textures.
+
+    Example:
+
+        diamond
+        -> textures/item/diamond.png
+
+        stone
+        -> textures/item/stone.png
+        -> if unavailable:
+           textures/block/stone.png
+
+        diamond_block
+        -> textures/item/diamond_block.png
+        -> if unavailable:
+           textures/block/diamond_block.png
+
+    We don't assume that every Minecraft item is
+    necessarily in only one folder.
+*/
+
+
+function getItemTextureURL(itemName) {
+
+    return (
+        ITEM_TEXTURE_BASE +
+        encodeURIComponent(itemName) +
+        ".png"
+    );
+}
+
+
+function getBlockTextureURL(itemName) {
+
+    return (
+        BLOCK_TEXTURE_BASE +
+        encodeURIComponent(itemName) +
+        ".png"
+    );
+}
+
+
+/*
+    Returns both possible locations.
+
+    Item texture gets priority because the inventory
+    should show the actual inventory icon whenever
+    Minecraft has one.
+
+    Block texture is the fallback for block-only assets.
+*/
+
+function getTextureCandidates(itemName) {
+
+    return [
+
+        getItemTextureURL(itemName),
+
+        getBlockTextureURL(itemName)
+
+    ];
+}
+
+
+/* ========================================================
+   CREATE MINECRAFT ICON
+======================================================== */
+
+function createMinecraftIcon(
+    itemName,
+    altText,
+    className
+) {
+
+    const img =
+        document.createElement("img");
+
+    img.className =
+        className;
+
+    img.alt =
+        altText || itemName;
+
+    img.draggable =
+        false;
+
+
+    /*
+        Use cached URL if we've already found
+        the correct texture.
+    */
+
+    if (textureCache[itemName]) {
+
+        img.src =
+            textureCache[itemName];
+
+        return img;
+    }
+
+
+    const candidates =
+        getTextureCandidates(itemName);
+
+
+    let index = 0;
+
+
+    function tryNextTexture() {
+
+        if (index >= candidates.length) {
+
+            /*
+                Nothing exists for this ID.
+
+                Use a small fallback icon instead
+                of showing a broken-image symbol.
+            */
+
+            img.style.display =
+                "none";
+
+            const fallback =
+                document.createElement("div");
+
+            fallback.className =
+                "icon-fallback";
+
+            fallback.textContent =
+                "▧";
+
+            fallback.title =
+                "Texture unavailable";
+
+            img.parentNode?.replaceChild(
+                fallback,
+                img
+            );
+
+            return;
+        }
+
+
+        const url =
+            candidates[index++];
+
+        img.src =
+            url;
+    }
+
+
+    img.onload =
+        function() {
+
+            /*
+                Cache the successful mapping.
+            */
+
+            textureCache[itemName] =
+                img.src;
+        };
+
+
+    img.onerror =
+        function() {
+
+            tryNextTexture();
+        };
+
+
+    tryNextTexture();
+
+
+    return img;
+}
+
+
+/*
+    This function is used by the inventory renderer.
+
+    It has the same 1.21.11 item -> block fallback.
+*/
+
+function getItemIcon(itemName) {
+
+    if (textureCache[itemName]) {
+        return textureCache[itemName];
+    }
+
+    return getItemTextureURL(itemName);
+}
+
+
+/* ========================================================
+   ADD RESOURCE
+======================================================== */
+
+function addSelectedItem() {
+
+    if (!selectedItem) {
+
+        alert(
+            "Please select a Minecraft item first."
+        );
+
+        return;
+    }
+
+
+    const quantity =
+        Number(
+            document
+                .getElementById("quantity")
+                .value
+        );
+
+
+    if (!quantity || quantity < 1) {
+
+        alert(
+            "Enter a valid quantity."
+        );
+
+        return;
+    }
+
+
+    resources.push({
+
+        id:
+            Date.now() +
+            Math.random(),
+
+        name:
+            selectedItem.name,
+
+        displayName:
+            selectedItem.displayName,
+
+        quantity:
+            quantity,
+
+        stackSize:
+            selectedItem.stackSize || 64,
+
+        completed:
+            false
+
+    });
+
+
+    saveResources();
+
+
+    document
+        .getElementById("quantity")
+        .value = 1;
+
+
+    selectedItem = null;
+
+
+    document
+        .getElementById("pickerButton")
+        .textContent =
+        "Select a Minecraft item...";
+
+
+    renderInventory();
+}
+
+
+/* ========================================================
+   TOGGLE RESOURCE
+======================================================== */
+
+function toggleResource(id) {
+
+    const resource =
+        resources.find(
+            item => item.id === id
+        );
+
+
+    if (!resource) {
+        return;
+    }
+
+
+    resource.completed =
+        !resource.completed;
+
+
+    saveResources();
+
+    renderInventory();
+}
+
+
+/* ========================================================
+   DELETE RESOURCE
+======================================================== */
+
+function deleteResource(id) {
+
+    resources =
+        resources.filter(
+            item => item.id !== id
+        );
+
+
+    saveResources();
+
+    renderInventory();
+}
+
+
+/* ========================================================
+   CLEAR INVENTORY
+======================================================== */
+
+function clearInventory() {
+
+    if (resources.length === 0) {
+        return;
+    }
+
+
+    if (
+        !confirm(
+            "Are you sure you want to clear all resources?"
+        )
+    ) {
+
+        return;
+    }
+
+
+    resources = [];
+
+
+    saveResources();
+
+    renderInventory();
+}
+
+
+/* ========================================================
+   SAVE
+======================================================== */
+
+function saveResources() {
+
+    localStorage.setItem(
+        "minecraftResources",
+        JSON.stringify(resources)
+    );
+}
+
+
+/* ========================================================
+   INVENTORY ICON
+======================================================== */
+
+function createInventoryIcon(resource) {
+
+    return createMinecraftIcon(
+        resource.name,
+        resource.displayName,
+        "resource-image"
+    );
+}
+
+
+/* ========================================================
+   RENDER INVENTORY
+======================================================== */
+
+function renderInventory() {
+
+    const inventory =
+        document.getElementById("inventory");
+
+    inventory.innerHTML = "";
+
+
+    if (resources.length === 0) {
+
+        inventory.innerHTML = `
+            <div class="empty">
+                No resources added yet.
+            </div>
+        `;
+
+    } else {
+
+        resources.forEach(resource => {
+
+            const row =
+                document.createElement("div");
+
+
+            row.className =
+                "resource" +
+                (
+                    resource.completed
+                        ? " completed"
+                        : ""
+                );
+
+
+            /*
+                CHECK BUTTON
+            */
+
+            const check =
+                document.createElement("button");
+
+            check.className =
+                "check" +
+                (
+                    resource.completed
+                        ? " checked"
+                        : ""
+                );
+
+            check.textContent =
+                resource.completed
+                    ? "✓"
+                    : "";
+
+            check.onclick =
+                function() {
+
+                    toggleResource(
+                        resource.id
+                    );
+
+                };
+
+
+            /*
+                ICON
+            */
+
+            const icon =
+                createInventoryIcon(
+                    resource
+                );
+
+
+            /*
+                NAME
+            */
+
+            const name =
+                document.createElement("div");
+
+            name.className =
+                "resource-name";
+
+            name.textContent =
+                resource.displayName;
+
+
+            /*
+                QUANTITY
+            */
+
+            const quantity =
+                document.createElement("div");
+
+            quantity.className =
+                "quantity";
+
+            quantity.textContent =
+                "× " + resource.quantity;
+
+
+            /*
+                DELETE
+            */
+
+            const deleteButton =
+                document.createElement("button");
+
+            deleteButton.className =
+                "delete-button";
+
+            deleteButton.textContent =
+                "Delete";
+
+            deleteButton.onclick =
+                function() {
+
+                    deleteResource(
+                        resource.id
+                    );
+
+                };
+
+
+            row.appendChild(check);
+            row.appendChild(icon);
+            row.appendChild(name);
+            row.appendChild(quantity);
+            row.appendChild(deleteButton);
+
+
+            inventory.appendChild(row);
+
+        });
+    }
+
+
+    updateStats();
+}
+
+
+/* ========================================================
+   STATS
+======================================================== */
+
+function updateStats() {
+
+    const total =
+        resources.length;
+
+
+    const completed =
+        resources.filter(
+            item => item.completed
+        ).length;
+
+
+    document
+        .getElementById("totalText")
+        .textContent =
+        `${total} resource${total === 1 ? "" : "s"}`;
+
+
+    document
+        .getElementById("completedText")
+        .textContent =
+        `${completed} completed`;
+
+
+    const percentage =
+        total === 0
+            ? 0
+            : (completed / total) * 100;
+
+
+    document
+        .getElementById("progressBar")
+        .style.width =
+        percentage + "%";
+}
+
+
+/* ========================================================
+   SECURITY
+======================================================== */
+
+function escapeHTML(text) {
+
+    const div =
+        document.createElement("div");
+
+    div.textContent =
+        text;
+
+    return div.innerHTML;
+}
+
+
+/* ========================================================
+   CLOSE PICKER WHEN CLICKING OUTSIDE
+======================================================== */
+
+document.addEventListener(
+    "click",
+    function(event) {
+
+        const picker =
+            document.querySelector(".picker");
+
+
+        if (
+            picker &&
+            !picker.contains(event.target)
+        ) {
+
+            document
+                .getElementById("pickerMenu")
+                .classList.remove("open");
+        }
+    }
+);
+
+
+/* ========================================================
+   START
+======================================================== */
+
+loadItems();
+
+renderInventory();
+
+</script>
+
+</body>
+</html>

@@ -1,0 +1,1549 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Gamble</title>
+
+<style>
+* {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+    font-family: Arial, Helvetica, sans-serif;
+}
+
+body {
+    min-height: 100vh;
+    color: #fff;
+    background:
+        radial-gradient(circle at 50% -20%, #29345d 0%, #101526 38%, #070a12 80%);
+}
+
+header {
+    height: 70px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-bottom: 1px solid #29324a;
+    background: rgba(7, 10, 18, .88);
+    backdrop-filter: blur(12px);
+}
+
+.logo {
+    font-size: 23px;
+    font-weight: 900;
+}
+
+.container {
+    width: min(1100px, calc(100% - 30px));
+    margin: 30px auto;
+}
+
+.modes {
+    display: flex;
+    gap: 10px;
+    margin-bottom: 20px;
+    flex-wrap: wrap;
+}
+
+.mode-btn {
+    background: #12192c;
+    border: 1px solid #2c3755;
+    color: #9ca8c7;
+    padding: 11px 20px;
+    border-radius: 10px;
+    cursor: pointer;
+    transition: .2s;
+}
+
+.mode-btn:hover {
+    background: #19213a;
+    color: #fff;
+}
+
+.mode-btn.active {
+    background: #27315b;
+    border-color: #6678ff;
+    color: #fff;
+}
+
+.panel {
+    background: rgba(13, 18, 32, .94);
+    border: 1px solid #29334d;
+    border-radius: 20px;
+    padding: 28px;
+    box-shadow: 0 25px 70px rgba(0,0,0,.35);
+}
+
+.players {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 15px;
+}
+
+.player {
+    padding: 17px;
+    border-radius: 14px;
+    background: #10172a;
+    border: 1px solid #303b5c;
+}
+
+.viewer {
+    border-color: #5269ff;
+}
+
+.host {
+    border-color: #a050ff;
+}
+
+.player-label {
+    font-size: 12px;
+    color: #8e9ab8;
+    letter-spacing: 1px;
+}
+
+.player-name {
+    font-size: 20px;
+    font-weight: 800;
+    margin-top: 5px;
+}
+
+.game-area {
+    min-height: 360px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin: 5px 0;
+}
+
+/* =========================
+   COIN
+========================= */
+
+.coin-scene {
+    width: 190px;
+    height: 190px;
+    perspective: 900px;
+}
+
+.coin {
+    width: 190px;
+    height: 190px;
+    position: relative;
+    transform-style: preserve-3d;
+    transform: rotateY(0deg);
+}
+
+.coin-face {
+    position: absolute;
+    inset: 0;
+
+    border-radius: 50%;
+    backface-visibility: hidden;
+
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    font-size: 24px;
+    font-weight: 900;
+
+    border: 9px solid #d69e22;
+
+    background:
+        radial-gradient(
+            circle at 35% 30%,
+            #fff0a3,
+            #f1c83c 45%,
+            #b87c0c 100%
+        );
+
+    color: #654600;
+
+    box-shadow:
+        inset 0 0 0 4px #ffe36a,
+        0 15px 35px rgba(0,0,0,.4);
+}
+
+.coin-face::after {
+    content: "";
+    position: absolute;
+    inset: 13px;
+    border-radius: 50%;
+    border: 2px dashed rgba(90,55,0,.35);
+}
+
+.coin-host {
+    transform: rotateY(180deg);
+
+    background:
+        radial-gradient(
+            circle at 35% 30%,
+            #efd7ff,
+            #a65ae8 50%,
+            #6020a0 100%
+        );
+
+    border-color: #ad61f0;
+    color: #fff;
+}
+
+.coin-host::after {
+    border-color: rgba(255,255,255,.35);
+}
+
+/* =========================
+   DICE
+========================= */
+
+.dice {
+    width: 150px;
+    height: 150px;
+
+    border-radius: 25px;
+
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    font-size: 70px;
+    font-weight: 900;
+
+    background:
+        linear-gradient(
+            145deg,
+            #f8f8ff,
+            #aab1c5
+        );
+
+    color: #12182a;
+
+    box-shadow:
+        inset -10px -10px 25px rgba(0,0,0,.2),
+        0 20px 40px rgba(0,0,0,.4);
+
+    transition: transform .15s;
+}
+
+.dice.rolling {
+    animation: diceRoll .8s linear infinite;
+}
+
+@keyframes diceRoll {
+
+    0% {
+        transform:
+            rotate(0deg)
+            rotateX(0deg)
+            rotateY(0deg);
+    }
+
+    25% {
+        transform:
+            rotate(90deg)
+            rotateX(90deg)
+            rotateY(45deg);
+    }
+
+    50% {
+        transform:
+            rotate(180deg)
+            rotateX(180deg)
+            rotateY(90deg);
+    }
+
+    75% {
+        transform:
+            rotate(270deg)
+            rotateX(270deg)
+            rotateY(180deg);
+    }
+
+    100% {
+        transform:
+            rotate(360deg)
+            rotateX(360deg)
+            rotateY(360deg);
+    }
+}
+
+/* =========================
+   WHEEL
+========================= */
+
+.wheel-wrapper {
+    position: relative;
+    width: 310px;
+    height: 310px;
+}
+
+.wheel {
+    width: 310px;
+    height: 310px;
+
+    border-radius: 50%;
+
+    border: 8px solid #394563;
+
+    background: conic-gradient(
+        #ff5f6d 0deg 45deg,
+        #ffc371 45deg 90deg,
+        #54c8ff 90deg 135deg,
+        #9b6cff 135deg 180deg,
+        #48d597 180deg 225deg,
+        #ff8f5a 225deg 270deg,
+        #e969ff 270deg 315deg,
+        #61a8ff 315deg 360deg
+    );
+
+    transition:
+        transform 4s cubic-bezier(.12,.72,.17,1);
+
+    box-shadow:
+        0 20px 45px rgba(0,0,0,.4),
+        inset 0 0 0 4px rgba(255,255,255,.15);
+}
+
+.wheel-center {
+    position: absolute;
+
+    width: 58px;
+    height: 58px;
+
+    border-radius: 50%;
+
+    left: 126px;
+    top: 126px;
+
+    background: #fff;
+    border: 8px solid #242c43;
+
+    z-index: 3;
+}
+
+.pointer {
+    position: absolute;
+
+    top: -17px;
+    left: 135px;
+
+    width: 0;
+    height: 0;
+
+    border-left: 20px solid transparent;
+    border-right: 20px solid transparent;
+    border-top: 34px solid #fff;
+
+    z-index: 5;
+
+    filter:
+        drop-shadow(0 3px 4px #000);
+}
+
+/* =========================
+   CONTROLS
+========================= */
+
+.controls {
+    max-width: 650px;
+    margin: auto;
+}
+
+.action {
+    width: 100%;
+
+    margin-top: 10px;
+
+    padding: 14px;
+
+    border-radius: 10px;
+
+    border: 1px solid #3c4a70;
+
+    background:
+        linear-gradient(
+            135deg,
+            #5f72ff,
+            #874fff
+        );
+
+    color: white;
+
+    font-weight: 800;
+
+    cursor: pointer;
+}
+
+.action:hover {
+    filter: brightness(1.12);
+}
+
+.secondary {
+    background: #151d32;
+    border-color: #303b5a;
+}
+
+.skip {
+    background: transparent;
+    border: 1px solid #303b5a;
+    color: #aab4ce;
+}
+
+.result {
+    min-height: 32px;
+
+    text-align: center;
+
+    margin-top: 18px;
+
+    font-size: 20px;
+    font-weight: 900;
+}
+
+.config {
+    background: #0c1222;
+    border: 1px solid #29344f;
+
+    border-radius: 13px;
+
+    padding: 18px;
+
+    margin-bottom: 15px;
+}
+
+.config h3 {
+    margin-bottom: 12px;
+}
+
+.config-row {
+    display: grid;
+
+    grid-template-columns: 1fr 1fr;
+
+    gap: 12px;
+}
+
+.config-side {
+    padding: 13px;
+
+    background: #10182c;
+
+    border-radius: 10px;
+}
+
+.config-side.viewer-side {
+    border: 1px solid #5269ff;
+}
+
+.config-side.host-side {
+    border: 1px solid #a050ff;
+}
+
+.config-title {
+    font-size: 13px;
+
+    color: #9ca8c7;
+
+    margin-bottom: 8px;
+}
+
+.number-inputs {
+    display: flex;
+    gap: 7px;
+}
+
+.number-inputs input {
+    width: 100%;
+}
+
+input[type="text"],
+input[type="number"] {
+    background: #080d19;
+
+    color: white;
+
+    border: 1px solid #303b59;
+
+    padding: 11px;
+
+    border-radius: 8px;
+
+    outline: none;
+}
+
+input:focus {
+    border-color: #6678ff;
+}
+
+.wheel-list {
+    margin-top: 10px;
+}
+
+.wheel-item {
+    display: flex;
+
+    align-items: center;
+
+    justify-content: space-between;
+
+    padding: 9px 11px;
+
+    margin-bottom: 7px;
+
+    background: #121a2d;
+
+    border-radius: 8px;
+}
+
+.remove {
+    background: #351923;
+
+    color: #ff9aa9;
+
+    border: 1px solid #5b2634;
+
+    padding: 6px 9px;
+
+    border-radius: 7px;
+
+    cursor: pointer;
+}
+
+.add-row {
+    display: flex;
+    gap: 8px;
+}
+
+.add-row input {
+    flex: 1;
+}
+
+.hidden {
+    display: none !important;
+}
+
+@media(max-width: 650px) {
+
+    .container {
+        width: calc(100% - 18px);
+    }
+
+    .panel {
+        padding: 17px;
+    }
+
+    .players,
+    .config-row {
+        grid-template-columns: 1fr;
+    }
+
+    .coin-scene,
+    .coin {
+        width: 150px;
+        height: 150px;
+    }
+
+    .wheel-wrapper,
+    .wheel {
+        width: 260px;
+        height: 260px;
+    }
+
+    .wheel-center {
+        left: 101px;
+        top: 101px;
+    }
+
+    .pointer {
+        left: 110px;
+    }
+}
+</style>
+</head>
+
+<body>
+
+<header>
+    <div class="logo">Gamble - 💰/🎰/🎲</div>
+</header>
+
+<div class="container">
+
+    <div class="modes">
+
+        <button
+            class="mode-btn active"
+            onclick="setMode('coin', this)">
+            🪙 Coinflip
+        </button>
+
+        <button
+            class="mode-btn"
+            onclick="setMode('dice', this)">
+            🎲 Dice
+        </button>
+
+        <button
+            class="mode-btn"
+            onclick="setMode('wheel', this)">
+            🎡 Wheel
+        </button>
+
+    </div>
+
+    <section class="panel">
+
+        <div class="players">
+
+            <div class="player viewer">
+                <div class="player-label">
+                    VIEWER
+                </div>
+
+                <div class="player-name">
+                    Viewer Side
+                </div>
+            </div>
+
+            <div class="player host">
+                <div class="player-label">
+                    HOST
+                </div>
+
+                <div class="player-name">
+                    Host Side
+                </div>
+            </div>
+
+        </div>
+
+
+        <!-- =========================
+             COINFLIP
+        ========================== -->
+
+        <div id="coinMode">
+
+            <div class="game-area">
+
+                <div class="coin-scene">
+
+                    <div
+                        class="coin"
+                        id="coin">
+
+                        <div class="coin-face">
+                            VIEWER
+                        </div>
+
+                        <div class="coin-face coin-host">
+                            HOST
+                        </div>
+
+                    </div>
+
+                </div>
+
+            </div>
+
+            <div class="controls">
+
+                <button
+                    class="action"
+                    id="flipButton"
+                    onclick="flipCoin()">
+                    FLIP COIN
+                </button>
+
+                <button
+                    class="action skip"
+                    id="skipCoinButton"
+                    onclick="skipCoin()">
+                    SKIP ANIMATION
+                </button>
+
+                <div
+                    class="result"
+                    id="coinResult">
+                </div>
+
+            </div>
+
+        </div>
+
+
+        <!-- =========================
+             DICE
+        ========================== -->
+
+        <div
+            id="diceMode"
+            class="hidden">
+
+            <div class="config">
+
+                <h3>
+                    🎲 Dice Configuration
+                </h3>
+
+                <div class="config-row">
+
+                    <div
+                        class="config-side viewer-side">
+
+                        <div class="config-title">
+                            Viewer numbers
+                        </div>
+
+                        <div class="number-inputs">
+
+                            <input
+                                id="v1"
+                                type="number"
+                                min="1"
+                                max="6"
+                                value="1">
+
+                            <input
+                                id="v2"
+                                type="number"
+                                min="1"
+                                max="6"
+                                value="3">
+
+                            <input
+                                id="v3"
+                                type="number"
+                                min="1"
+                                max="6"
+                                value="5">
+
+                        </div>
+
+                    </div>
+
+                    <div
+                        class="config-side host-side">
+
+                        <div class="config-title">
+                            Host numbers
+                        </div>
+
+                        <div class="number-inputs">
+
+                            <input
+                                id="h1"
+                                type="number"
+                                min="1"
+                                max="6"
+                                value="2">
+
+                            <input
+                                id="h2"
+                                type="number"
+                                min="1"
+                                max="6"
+                                value="4">
+
+                            <input
+                                id="h3"
+                                type="number"
+                                min="1"
+                                max="6"
+                                value="6">
+
+                        </div>
+
+                    </div>
+
+                </div>
+
+            </div>
+
+            <div class="game-area">
+
+                <div
+                    class="dice"
+                    id="dice">
+                    1
+                </div>
+
+            </div>
+
+            <div class="controls">
+
+                <button
+                    class="action"
+                    onclick="rollDice()">
+                    ROLL DICE
+                </button>
+
+                <div
+                    class="result"
+                    id="diceResult">
+                </div>
+
+            </div>
+
+        </div>
+
+
+        <!-- =========================
+             WHEEL
+        ========================== -->
+
+        <div
+            id="wheelMode"
+            class="hidden">
+
+            <div class="config">
+
+                <h3>
+                    🎡 Wheel Items
+                </h3>
+
+                <div class="add-row">
+
+                    <input
+                        id="wheelInput"
+                        type="text"
+                        placeholder="Enter an item">
+
+                    <button
+                        class="action secondary"
+                        style="width:auto;margin:0"
+                        onclick="addWheelItem()">
+                        ADD
+                    </button>
+
+                </div>
+
+                <div
+                    class="wheel-list"
+                    id="wheelList">
+                </div>
+
+            </div>
+
+            <div class="game-area">
+
+                <div class="wheel-wrapper">
+
+                    <div class="pointer"></div>
+
+                    <div
+                        class="wheel"
+                        id="wheel">
+                    </div>
+
+                    <div
+                        class="wheel-center">
+                    </div>
+
+                </div>
+
+            </div>
+
+            <div class="controls">
+
+                <button
+                    class="action"
+                    onclick="spinWheel()">
+                    SPIN WHEEL
+                </button>
+
+                <button
+                    class="action skip"
+                    onclick="skipWheel()">
+                    SKIP ANIMATION
+                </button>
+
+                <div
+                    class="result"
+                    id="wheelResult">
+                </div>
+
+            </div>
+
+        </div>
+
+    </section>
+
+</div>
+
+
+<script>
+
+/* =====================================================
+   MODE SWITCHING
+===================================================== */
+
+function setMode(mode, button) {
+
+    document
+        .querySelectorAll(".mode-btn")
+        .forEach(btn => {
+            btn.classList.remove("active");
+        });
+
+    button.classList.add("active");
+
+    document
+        .getElementById("coinMode")
+        .classList.toggle(
+            "hidden",
+            mode !== "coin"
+        );
+
+    document
+        .getElementById("diceMode")
+        .classList.toggle(
+            "hidden",
+            mode !== "dice"
+        );
+
+    document
+        .getElementById("wheelMode")
+        .classList.toggle(
+            "hidden",
+            mode !== "wheel"
+        );
+}
+
+
+/* =====================================================
+   SECURE RANDOM NUMBER
+===================================================== */
+
+function secureRandomBit() {
+
+    const random =
+        new Uint32Array(1);
+
+    crypto.getRandomValues(random);
+
+    return random[0] & 1;
+}
+
+
+/* =====================================================
+   COINFLIP
+===================================================== */
+
+const coin =
+    document.getElementById("coin");
+
+let coinSpinning = false;
+let coinResult = null;
+let coinTimer = null;
+
+let coinRotation = 0;
+
+
+function flipCoin() {
+
+    if (coinSpinning)
+        return;
+
+    coinSpinning = true;
+
+    /*
+       Exactly one random bit:
+
+       0 = Viewer
+       1 = Host
+
+       This gives each side the same probability.
+    */
+
+    coinResult =
+        secureRandomBit() === 0
+            ? "VIEWER"
+            : "HOST";
+
+    document
+        .getElementById("coinResult")
+        .textContent =
+        "Flipping...";
+
+
+    /*
+       Always add rotations.
+
+       We NEVER reset the rotation
+       back to zero.
+
+       This is what allows the animation
+       to work repeatedly.
+    */
+
+    const fullTurns = 6;
+
+    if (coinResult === "VIEWER") {
+
+        coinRotation +=
+            fullTurns * 360;
+
+    } else {
+
+        coinRotation +=
+            fullTurns * 360 + 180;
+    }
+
+
+    coin.style.transition =
+        "transform 2.2s cubic-bezier(.12,.75,.18,1)";
+
+    coin.style.transform =
+        `rotateY(${coinRotation}deg)`;
+
+
+    coinTimer =
+        setTimeout(
+            finishCoin,
+            2250
+        );
+}
+
+
+function finishCoin() {
+
+    if (!coinSpinning)
+        return;
+
+    coinSpinning = false;
+
+    document
+        .getElementById("coinResult")
+        .textContent =
+        coinResult === "VIEWER"
+            ? "🟡 Viewer wins!"
+            : "🟣 Host wins!";
+}
+
+
+function skipCoin() {
+
+    if (!coinSpinning)
+        return;
+
+    clearTimeout(coinTimer);
+
+    /*
+       Find the nearest correct final
+       face without destroying the
+       accumulated rotation.
+    */
+
+    const remainder =
+        coinRotation % 360;
+
+    let finalRotation;
+
+    if (coinResult === "VIEWER") {
+
+        finalRotation =
+            coinRotation - remainder;
+
+    } else {
+
+        finalRotation =
+            coinRotation -
+            remainder +
+            180;
+    }
+
+
+    coin.style.transition =
+        "transform .15s ease";
+
+    coin.style.transform =
+        `rotateY(${finalRotation}deg)`;
+
+    coinRotation =
+        finalRotation;
+
+
+    setTimeout(() => {
+
+        coinSpinning = false;
+
+        document
+            .getElementById("coinResult")
+            .textContent =
+            coinResult === "VIEWER"
+                ? "🟡 Viewer wins!"
+                : "🟣 Host wins!";
+
+        coin.style.transition =
+            "transform 2.2s cubic-bezier(.12,.75,.18,1)";
+
+    }, 160);
+}
+
+
+/* =====================================================
+   DICE
+===================================================== */
+
+let diceRolling = false;
+
+function rollDice() {
+
+    if (diceRolling)
+        return;
+
+    const dice =
+        document.getElementById("dice");
+
+    const result =
+        document.getElementById("diceResult");
+
+
+    const viewerNumbers = [
+        Number(document.getElementById("v1").value),
+        Number(document.getElementById("v2").value),
+        Number(document.getElementById("v3").value)
+    ];
+
+    const hostNumbers = [
+        Number(document.getElementById("h1").value),
+        Number(document.getElementById("h2").value),
+        Number(document.getElementById("h3").value)
+    ];
+
+
+    const allNumbers = [
+        ...viewerNumbers,
+        ...hostNumbers
+    ];
+
+
+    if (
+        allNumbers.some(
+            n =>
+                n < 1 ||
+                n > 6 ||
+                !Number.isInteger(n)
+        )
+    ) {
+
+        result.textContent =
+            "Numbers must be between 1 and 6.";
+
+        return;
+    }
+
+
+    const duplicate =
+        new Set(allNumbers).size !== 6;
+
+
+    if (duplicate) {
+
+        result.textContent =
+            "Use every number 1–6 exactly once.";
+
+        return;
+    }
+
+
+    diceRolling = true;
+
+    dice.classList.add("rolling");
+
+    result.textContent =
+        "Rolling...";
+
+
+    setTimeout(() => {
+
+        dice.classList.remove("rolling");
+
+
+        const rolled =
+            Math.floor(
+                Math.random() * 6
+            ) + 1;
+
+
+        dice.textContent =
+            rolled;
+
+
+        if (
+            viewerNumbers.includes(rolled)
+        ) {
+
+            result.textContent =
+                `🎲 ${rolled} — Viewer wins!`;
+
+        } else {
+
+            result.textContent =
+                `🎲 ${rolled} — Host wins!`;
+        }
+
+
+        diceRolling = false;
+
+    }, 1000);
+}
+
+
+/* =====================================================
+   WHEEL
+===================================================== */
+
+let wheelItems = [
+    "Diamond",
+    "Emerald",
+    "Gold",
+    "Iron",
+    "Redstone",
+    "Netherite",
+    "Coal",
+    "Copper"
+];
+
+let wheelRotation = 0;
+
+let wheelSpinning = false;
+let wheelTimer = null;
+let wheelTarget = null;
+
+
+const wheel =
+    document.getElementById("wheel");
+
+
+function renderWheel() {
+
+    const list =
+        document.getElementById("wheelList");
+
+    list.innerHTML = "";
+
+
+    wheelItems.forEach(
+        (item, index) => {
+
+            const row =
+                document.createElement("div");
+
+            row.className =
+                "wheel-item";
+
+
+            row.innerHTML = `
+                <span>${escapeHTML(item)}</span>
+
+                <button
+                    class="remove"
+                    onclick="removeWheelItem(${index})">
+                    Remove
+                </button>
+            `;
+
+
+            list.appendChild(row);
+        }
+    );
+
+
+    updateWheelVisual();
+}
+
+
+function updateWheelVisual() {
+
+    const count =
+        wheelItems.length;
+
+
+    if (count === 0) {
+
+        wheel.style.background =
+            "#202941";
+
+        return;
+    }
+
+
+    const colors = [
+        "#ff5f6d",
+        "#ffc371",
+        "#54c8ff",
+        "#9b6cff",
+        "#48d597",
+        "#ff8f5a",
+        "#e969ff",
+        "#61a8ff"
+    ];
+
+
+    const slice =
+        360 / count;
+
+
+    let gradient =
+        "conic-gradient(";
+
+
+    for (
+        let i = 0;
+        i < count;
+        i++
+    ) {
+
+        const start =
+            i * slice;
+
+        const end =
+            (i + 1) * slice;
+
+
+        gradient +=
+            `${colors[i % colors.length]} ${start}deg ${end}deg`;
+
+
+        if (i < count - 1)
+            gradient += ",";
+    }
+
+
+    gradient += ")";
+
+
+    wheel.style.background =
+        gradient;
+}
+
+
+function addWheelItem() {
+
+    const input =
+        document.getElementById(
+            "wheelInput"
+        );
+
+
+    const value =
+        input.value.trim();
+
+
+    if (!value)
+        return;
+
+
+    if (wheelItems.length >= 20) {
+
+        document
+            .getElementById("wheelResult")
+            .textContent =
+            "Maximum 20 items.";
+
+        return;
+    }
+
+
+    wheelItems.push(value);
+
+    input.value = "";
+
+    renderWheel();
+}
+
+
+function removeWheelItem(index) {
+
+    wheelItems.splice(
+        index,
+        1
+    );
+
+    renderWheel();
+}
+
+
+function spinWheel() {
+
+    if (wheelSpinning)
+        return;
+
+
+    if (wheelItems.length < 2) {
+
+        document
+            .getElementById("wheelResult")
+            .textContent =
+            "Add at least 2 items.";
+
+        return;
+    }
+
+
+    wheelSpinning = true;
+
+
+    document
+        .getElementById("wheelResult")
+        .textContent =
+        "Spinning...";
+
+
+    const count =
+        wheelItems.length;
+
+
+    wheelTarget =
+        Math.floor(
+            Math.random() * count
+        );
+
+
+    const slice =
+        360 / count;
+
+
+    /*
+       Pointer is at the top.
+
+       Put the center of the selected
+       slice underneath the pointer.
+    */
+
+    const targetAngle =
+        360 -
+        (
+            wheelTarget * slice +
+            slice / 2
+        );
+
+
+    const extraTurns =
+        7 * 360;
+
+
+    const currentRemainder =
+        wheelRotation % 360;
+
+
+    wheelRotation +=
+        extraTurns +
+        targetAngle -
+        currentRemainder;
+
+
+    wheel.style.transition =
+        "transform 4s cubic-bezier(.12,.72,.17,1)";
+
+
+    wheel.style.transform =
+        `rotate(${wheelRotation}deg)`;
+
+
+    wheelTimer =
+        setTimeout(
+            finishWheel,
+            4100
+        );
+}
+
+
+function finishWheel() {
+
+    if (!wheelSpinning)
+        return;
+
+
+    wheelSpinning = false;
+
+
+    document
+        .getElementById("wheelResult")
+        .textContent =
+        `🎡 ${wheelItems[wheelTarget]}`;
+}
+
+
+function skipWheel() {
+
+    if (!wheelSpinning)
+        return;
+
+
+    clearTimeout(wheelTimer);
+
+
+    wheel.style.transition =
+        "transform .1s linear";
+
+
+    wheel.style.transform =
+        `rotate(${wheelRotation}deg)`;
+
+
+    setTimeout(() => {
+
+        wheelSpinning = false;
+
+
+        document
+            .getElementById("wheelResult")
+            .textContent =
+            `🎡 ${wheelItems[wheelTarget]}`;
+
+
+        wheel.style.transition =
+            "transform 4s cubic-bezier(.12,.72,.17,1)";
+
+    }, 120);
+}
+
+
+/* =====================================================
+   HTML ESCAPING
+===================================================== */
+
+function escapeHTML(text) {
+
+    const div =
+        document.createElement("div");
+
+    div.textContent =
+        text;
+
+    return div.innerHTML;
+}
+
+
+/* =====================================================
+   ENTER KEY FOR WHEEL
+===================================================== */
+
+document
+    .getElementById("wheelInput")
+    .addEventListener(
+        "keydown",
+        event => {
+
+            if (event.key === "Enter") {
+                addWheelItem();
+            }
+
+        }
+    );
+
+
+/* =====================================================
+   INITIALIZE
+===================================================== */
+
+renderWheel();
+
+</script>
+
+</body>
+</html>

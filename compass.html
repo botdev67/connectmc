@@ -1,0 +1,1542 @@
+<html lang="en"><head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Minecraft Base Triangulator</title>
+
+<style>
+*{box-sizing:border-box}
+
+body{
+    margin:0;
+    background:#080b10;
+    color:#eee;
+    font-family:Arial,sans-serif;
+    padding:25px;
+}
+
+.container{
+    max-width:1100px;
+    margin:auto;
+}
+
+h1{
+    margin:0;
+    font-size:30px;
+}
+
+.subtitle{
+    color:#8e99a8;
+    margin:8px 0 25px;
+}
+
+.grid{
+    display:grid;
+    grid-template-columns:1fr 1fr;
+    gap:18px;
+}
+
+.card{
+    background:#111720;
+    border:1px solid #27313d;
+    border-radius:15px;
+    padding:20px;
+}
+
+.full{
+    grid-column:1/-1;
+}
+
+h2{
+    margin-top:0;
+    font-size:18px;
+}
+
+label{
+    display:block;
+    color:#9da8b5;
+    font-size:13px;
+    margin:10px 0 5px;
+}
+
+input{
+    width:100%;
+    padding:11px;
+    border-radius:8px;
+    border:1px solid #344150;
+    background:#080d13;
+    color:#fff;
+    outline:none;
+}
+
+input:focus{
+    border-color:#718cff;
+}
+
+.row{
+    display:grid;
+    grid-template-columns:1fr 1fr;
+    gap:10px;
+}
+
+button{
+    border:0;
+    border-radius:9px;
+    padding:11px 15px;
+    margin:5px 3px 0 0;
+    background:#657cff;
+    color:#fff;
+    font-weight:bold;
+    cursor:pointer;
+}
+
+button:hover{
+    filter:brightness(1.12);
+}
+
+.gray{
+    background:#293542;
+}
+
+.red{
+    background:#54262d;
+}
+
+.reading{
+    background:#0b1118;
+    border:1px solid #283442;
+    padding:15px;
+    border-radius:11px;
+    margin-bottom:12px;
+}
+
+.readingTop{
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
+    margin-bottom:10px;
+}
+
+.remove{
+    padding:6px 9px;
+    margin:0;
+    background:#54262d;
+}
+
+.result{
+    text-align:center;
+    background:#0e1915;
+    border-color:#315440;
+}
+
+.coordinates{
+    font-size:32px;
+    font-weight:bold;
+    margin:15px 0;
+}
+
+.status{
+    color:#9eafa6;
+    font-size:13px;
+    line-height:1.6;
+}
+
+.rangeBox{
+    margin:18px auto;
+    max-width:650px;
+    background:#09100d;
+    border:1px solid #294333;
+    border-radius:10px;
+    padding:15px;
+    text-align:left;
+}
+
+.rangeTitle{
+    font-weight:bold;
+    margin-bottom:10px;
+}
+
+.rangeLine{
+    display:flex;
+    justify-content:space-between;
+    gap:15px;
+    padding:5px 0;
+    color:#b9c5c0;
+}
+
+.rangeValue{
+    color:#fff;
+    font-weight:bold;
+}
+
+.warning{
+    margin-top:12px;
+    padding:10px;
+    border-radius:8px;
+    background:#211b0d;
+    border:1px solid #5a4a20;
+    color:#e6d28b;
+    text-align:left;
+}
+
+.good{
+    background:#0d1d15;
+    border-color:#315440;
+    color:#9fe0b7;
+}
+
+.info{
+    color:#abb6c3;
+    line-height:1.55;
+}
+
+canvas{
+    display:block;
+    width:100%;
+    height:400px;
+    background:#06090d;
+    border:1px solid #26313d;
+    border-radius:10px;
+}
+
+.compassBox{
+    display:flex;
+    justify-content:center;
+    align-items:center;
+    margin:15px 0;
+}
+
+.compass{
+    width:260px;
+    height:260px;
+    border-radius:50%;
+    border:3px solid #3c4857;
+    position:relative;
+    background:
+        radial-gradient(circle,#151d27 0 55%,#0b1017 56%);
+    box-shadow:0 0 30px #000;
+}
+
+.tick{
+    position:absolute;
+    left:50%;
+    top:50%;
+    width:2px;
+    height:118px;
+    background:#566474;
+    transform-origin:center bottom;
+}
+
+.tick:nth-child(1){transform:translate(-50%,-100%) rotate(0deg)}
+.tick:nth-child(2){transform:translate(-50%,-100%) rotate(45deg)}
+.tick:nth-child(3){transform:translate(-50%,-100%) rotate(90deg)}
+.tick:nth-child(4){transform:translate(-50%,-100%) rotate(135deg)}
+.tick:nth-child(5){transform:translate(-50%,-100%) rotate(180deg)}
+.tick:nth-child(6){transform:translate(-50%,-100%) rotate(225deg)}
+.tick:nth-child(7){transform:translate(-50%,-100%) rotate(270deg)}
+.tick:nth-child(8){transform:translate(-50%,-100%) rotate(315deg)}
+
+.needle{
+    position:absolute;
+    left:50%;
+    top:50%;
+    width:5px;
+    height:100px;
+    background:#ff5252;
+    transform-origin:center bottom;
+    transform:translate(-50%,-100%) rotate(0deg);
+    border-radius:5px;
+    box-shadow:0 0 8px #ff525288;
+}
+
+.center{
+    position:absolute;
+    width:14px;
+    height:14px;
+    background:white;
+    border-radius:50%;
+    left:50%;
+    top:50%;
+    transform:translate(-50%,-50%);
+}
+
+.north{
+    position:absolute;
+    top:12px;
+    left:50%;
+    transform:translateX(-50%);
+    font-weight:bold;
+}
+
+.east{
+    position:absolute;
+    right:12px;
+    top:50%;
+    transform:translateY(-50%);
+}
+
+.south{
+    position:absolute;
+    bottom:12px;
+    left:50%;
+    transform:translateX(-50%);
+}
+
+.west{
+    position:absolute;
+    left:12px;
+    top:50%;
+    transform:translateY(-50%);
+}
+
+.angleDisplay{
+    text-align:center;
+    font-size:24px;
+    font-weight:bold;
+}
+
+@media(max-width:750px){
+    .grid{
+        grid-template-columns:1fr;
+    }
+
+    .full{
+        grid-column:auto;
+    }
+
+    .rangeLine{
+        flex-direction:column;
+        gap:2px;
+    }
+}
+</style>
+</head>
+
+<body>
+
+<div class="container">
+
+<h1>🧭 Minecraft Base Triangulator</h1>
+
+<div class="subtitle">
+Use compass bearings from different lodestones to estimate the hidden base.
+</div>
+
+<div class="grid">
+
+<!-- COMPASS -->
+<div class="card">
+
+<h2>🧭 Compass Preview</h2>
+
+<div class="compassBox">
+
+<div class="compass">
+
+<div class="tick"></div>
+<div class="tick"></div>
+<div class="tick"></div>
+<div class="tick"></div>
+<div class="tick"></div>
+<div class="tick"></div>
+<div class="tick"></div>
+<div class="tick"></div>
+
+<div class="north">N</div>
+<div class="east">E</div>
+<div class="south">S</div>
+<div class="west">W</div>
+
+<div id="needle" class="needle"></div>
+<div class="center"></div>
+
+</div>
+</div>
+
+<div class="angleDisplay">
+Angle: <span id="angleDisplay">0°</span>
+</div>
+
+<label>Preview angle</label>
+
+<input
+    id="previewAngle"
+    type="number"
+    min="-360"
+    max="360"
+    step="0.1"
+    value="0"
+    oninput="updateCompass()"
+>
+
+<p class="info">
+The compass uses:
+<br>
+<b>0° = North</b>
+<br>
+<b>90° = East</b>
+<br>
+<b>180° = South</b>
+<br>
+<b>270° = West</b>
+<br>
+Negative angles are also accepted.
+</p>
+
+</div>
+
+
+<!-- READINGS -->
+<div class="card">
+
+<h2>📍 Compass Readings</h2>
+
+<div id="readings"></div>
+
+<button onclick="addReading()">
+＋ Add Compass
+</button>
+
+<button class="gray" onclick="calculate()">
+🎯 Calculate Base
+</button>
+
+<button class="red" onclick="resetAll()">
+Reset
+</button>
+
+</div>
+
+
+<!-- UNCERTAINTY -->
+<div class="card full">
+
+<h2>🎯 Accuracy Settings</h2>
+
+<p class="info">
+Your compass angle may not be perfectly measured. Enter how far you think
+each reading could be off. The calculator will then estimate a likely
+coordinate range instead of pretending the result is guaranteed.
+</p>
+
+<label>
+Estimated angle uncertainty ±°
+</label>
+
+<input
+    id="angleUncertainty"
+    type="number"
+    min="0"
+    max="45"
+    step="0.1"
+    value="1"
+>
+
+<p class="info">
+Example: <b>1°</b> means a reading of 30° is treated as approximately
+29°–31°.
+</p>
+
+</div>
+
+
+<!-- RESULT -->
+<div class="card result full">
+
+<h2>🎯 Estimated Base Coordinates</h2>
+
+<div id="result" class="coordinates">
+—
+</div>
+
+<div id="rangeBox" class="rangeBox" style="display:none">
+
+<div class="rangeTitle">
+📐 Estimated Coordinate Range
+</div>
+
+<div class="rangeLine">
+<span>X range</span>
+<span id="xRange" class="rangeValue">—</span>
+</div>
+
+<div class="rangeLine">
+<span>Z range</span>
+<span id="zRange" class="rangeValue">—</span>
+</div>
+
+<div class="rangeLine">
+<span>Approx. uncertainty</span>
+<span id="uncertaintyRange" class="rangeValue">—</span>
+</div>
+
+</div>
+
+<div id="status" class="status">
+Add at least 2 readings.
+</div>
+
+<div id="warnings"></div>
+
+</div>
+
+
+<!-- MAP -->
+<div class="card full">
+
+<h2>🗺️ Triangulation Map</h2>
+
+<canvas id="map" width="1000" height="400"></canvas>
+
+<p class="info">
+White dots = lodestones<br>
+Blue lines = compass bearings<br>
+Green dot = estimated base
+</p>
+
+</div>
+
+
+<!-- INFO -->
+<div class="card full">
+
+<h2>ℹ️ How to use it</h2>
+
+<div class="info">
+
+<ol>
+
+<li>
+Put a lodestone at a known location.
+</li>
+
+<li>
+Look at the compass and determine the direction/angle it points.
+</li>
+
+<li>
+Enter that lodestone's X and Z coordinates.
+</li>
+
+<li>
+Enter the compass angle.
+</li>
+
+<li>
+Repeat from another location.
+</li>
+
+<li>
+Use at least two readings that point in different directions.
+</li>
+
+<li>
+Set your estimated angle uncertainty.
+</li>
+
+<li>
+Press <b>Calculate Base</b>.
+</li>
+
+</ol>
+
+<p>
+For better accuracy, use <b>3–5 readings</b> from different locations.
+</p>
+
+<p>
+<b>Important:</b> the mathematical intersection can be exact for the
+numbers entered, but the real Minecraft base position is not guaranteed
+because your compass angle and lodestone coordinates may contain errors.
+</p>
+
+</div>
+
+</div>
+
+</div>
+
+</div>
+
+
+<script>
+
+let readingCount=0;
+
+
+/* =========================
+   ADD READING
+========================= */
+
+function addReading(){
+
+    readingCount++;
+
+    const box=document.getElementById("readings");
+
+    const div=document.createElement("div");
+
+    div.className="reading";
+
+    div.innerHTML=`
+
+        <div class="readingTop">
+
+            <strong>
+                Compass ${readingCount}
+            </strong>
+
+            <button
+                class="remove"
+                onclick="removeReading(this)">
+                Remove
+            </button>
+
+        </div>
+
+        <div class="row">
+
+            <div>
+
+                <label>
+                    Lodestone X
+                </label>
+
+                <input
+                    class="x"
+                    type="number"
+                    step="any"
+                    placeholder="X">
+
+            </div>
+
+            <div>
+
+                <label>
+                    Lodestone Z
+                </label>
+
+                <input
+                    class="z"
+                    type="number"
+                    step="any"
+                    placeholder="Z">
+
+            </div>
+
+        </div>
+
+        <label>
+            Compass Angle °
+        </label>
+
+        <input
+            class="bearing"
+            type="number"
+            min="-360"
+            max="360"
+            step="0.1"
+            placeholder="0 = North">
+
+    `;
+
+    box.appendChild(div);
+
+}
+
+
+/* =========================
+   REMOVE
+========================= */
+
+function removeReading(btn){
+
+    btn.closest(".reading").remove();
+
+    renumber();
+
+}
+
+
+/* =========================
+   RENUMBER
+========================= */
+
+function renumber(){
+
+    document
+    .querySelectorAll(".reading")
+    .forEach((element,index)=>{
+
+        element
+        .querySelector("strong")
+        .textContent=
+        `Compass ${index+1}`;
+
+    });
+
+}
+
+
+/* =========================
+   GET READINGS
+========================= */
+
+function getReadings(){
+
+    const result=[];
+
+    document
+    .querySelectorAll(".reading")
+    .forEach(element=>{
+
+        const x=
+        parseFloat(
+            element.querySelector(".x").value
+        );
+
+        const z=
+        parseFloat(
+            element.querySelector(".z").value
+        );
+
+        let bearing=
+        parseFloat(
+            element.querySelector(".bearing").value
+        );
+
+        if(
+            Number.isFinite(x) &&
+            Number.isFinite(z) &&
+            Number.isFinite(bearing)
+        ){
+
+            bearing=
+            ((bearing%360)+360)%360;
+
+            result.push({
+                x:x,
+                z:z,
+                bearing:bearing
+            });
+
+        }
+
+    });
+
+    return result;
+
+}
+
+
+/* =========================
+   DIRECTION
+========================= */
+
+function direction(angle){
+
+    const r=
+    angle*Math.PI/180;
+
+    return {
+
+        dx:Math.sin(r),
+
+        dz:-Math.cos(r)
+
+    };
+
+}
+
+
+/* =========================
+   TRIANGULATION
+========================= */
+
+function triangulate(readings){
+
+    let A=0;
+    let B=0;
+    let C=0;
+    let D=0;
+    let E=0;
+
+    for(const r of readings){
+
+        const d=
+        direction(r.bearing);
+
+        const nx=-d.dz;
+        const nz=d.dx;
+
+        const rhs=
+        nx*r.x+
+        nz*r.z;
+
+        A+=nx*nx;
+        B+=nx*nz;
+        C+=nz*nz;
+
+        D+=nx*rhs;
+        E+=nz*rhs;
+
+    }
+
+    const det=
+    A*C-B*B;
+
+    if(Math.abs(det)<0.0000001){
+
+        return null;
+
+    }
+
+    return {
+
+        x:
+        (D*C-B*E)/det,
+
+        z:
+        (A*E-B*D)/det
+
+    };
+
+}
+
+
+/* =========================
+   ANGLE DIFFERENCE
+========================= */
+
+function angleDifference(a,b){
+
+    let d=
+    Math.abs(a-b)%180;
+
+    if(d>90)
+        d=180-d;
+
+    return d;
+
+}
+
+
+/* =========================
+   GEOMETRY QUALITY
+========================= */
+
+function getGeometryQuality(readings){
+
+    let smallest=180;
+
+    for(let i=0;i<readings.length;i++){
+
+        for(let j=i+1;j<readings.length;j++){
+
+            const difference=
+            angleDifference(
+                readings[i].bearing,
+                readings[j].bearing
+            );
+
+            smallest=
+            Math.min(smallest,difference);
+
+        }
+
+    }
+
+    return smallest;
+
+}
+
+
+/* =========================
+   UNCERTAINTY SAMPLES
+========================= */
+
+function generateUncertaintySamples(readings,uncertainty){
+
+    /*
+    Each reading gets -uncertainty, 0,
+    or +uncertainty.
+
+    This gives a deterministic range
+    around the central mathematical answer.
+    */
+
+    const samples=[];
+
+    function recurse(index,current){
+
+        if(index===readings.length){
+
+            const result=
+            triangulate(current);
+
+            if(result &&
+               Number.isFinite(result.x) &&
+               Number.isFinite(result.z)){
+
+                samples.push(result);
+
+            }
+
+            return;
+
+        }
+
+        const r=readings[index];
+
+        const offsets=
+        [-uncertainty,0,uncertainty];
+
+        for(const offset of offsets){
+
+            current.push({
+
+                x:r.x,
+
+                z:r.z,
+
+                bearing:
+                ((r.bearing+offset)%360+360)%360
+
+            });
+
+            recurse(index+1,current);
+
+            current.pop();
+
+        }
+
+    }
+
+    /*
+    Prevent enormous combinations if
+    the user adds many readings.
+    */
+
+    if(readings.length<=7){
+
+        recurse(0,[]);
+
+    }
+    else{
+
+        /*
+        With 8+ readings, use one-reading-at-a-time
+        perturbations instead of 3^N combinations.
+        */
+
+        const center=triangulate(readings);
+
+        if(center)
+            samples.push(center);
+
+        for(let i=0;i<readings.length;i++){
+
+            for(const offset of
+                [-uncertainty,uncertainty]){
+
+                const modified=
+                readings.map((r,index)=>{
+
+                    if(index!==i)
+                        return {...r};
+
+                    return {
+
+                        x:r.x,
+                        z:r.z,
+
+                        bearing:
+                        ((r.bearing+offset)%360+360)%360
+
+                    };
+
+                });
+
+                const result=
+                triangulate(modified);
+
+                if(result)
+                    samples.push(result);
+
+            }
+
+        }
+
+    }
+
+    return samples;
+
+}
+
+
+/* =========================
+   RANGE
+========================= */
+
+function getRange(samples){
+
+    if(!samples.length)
+        return null;
+
+    const xs=
+    samples.map(p=>p.x);
+
+    const zs=
+    samples.map(p=>p.z);
+
+    const minX=Math.min(...xs);
+    const maxX=Math.max(...xs);
+
+    const minZ=Math.min(...zs);
+    const maxZ=Math.max(...zs);
+
+    return {
+
+        minX,
+        maxX,
+        minZ,
+        maxZ,
+
+        width:maxX-minX,
+        height:maxZ-minZ
+
+    };
+
+}
+
+
+/* =========================
+   CALCULATE
+========================= */
+
+function calculate(){
+
+    const readings=
+    getReadings();
+
+    const result=
+    document.getElementById("result");
+
+    const status=
+    document.getElementById("status");
+
+    const rangeBox=
+    document.getElementById("rangeBox");
+
+    const warnings=
+    document.getElementById("warnings");
+
+
+    rangeBox.style.display="none";
+
+    warnings.innerHTML="";
+
+
+    if(readings.length<2){
+
+        result.textContent=
+        "Need 2+ readings";
+
+        status.textContent=
+        "Enter at least two complete compass readings.";
+
+        drawMap(readings,null);
+
+        return;
+
+    }
+
+
+    let uncertainty=
+    parseFloat(
+        document.getElementById("angleUncertainty").value
+    );
+
+    if(!Number.isFinite(uncertainty))
+        uncertainty=1;
+
+    uncertainty=
+    Math.max(0,Math.min(45,uncertainty));
+
+
+    const base=
+    triangulate(readings);
+
+
+    if(!base){
+
+        result.textContent=
+        "Cannot calculate";
+
+        status.textContent=
+        "Your readings are too parallel. Use directions that are more different.";
+
+        warnings.innerHTML=`
+            <div class="warning">
+                ⚠️ <b>Geometry problem:</b>
+                the compass bearings do not provide enough independent
+                directional information.
+            </div>
+        `;
+
+        drawMap(readings,null);
+
+        return;
+
+    }
+
+
+    result.textContent=
+    `X: ${Math.round(base.x)}   |   Z: ${Math.round(base.z)}`;
+
+
+    /* =====================
+       UNCERTAINTY
+    ===================== */
+
+    const samples=
+    generateUncertaintySamples(
+        readings,
+        uncertainty
+    );
+
+    const range=
+    getRange(samples);
+
+
+    if(range){
+
+        rangeBox.style.display="block";
+
+        document.getElementById("xRange")
+        .textContent=
+        `${Math.round(range.minX)} → ${Math.round(range.maxX)}`;
+
+        document.getElementById("zRange")
+        .textContent=
+        `${Math.round(range.minZ)} → ${Math.round(range.maxZ)}`;
+
+        const averageSpread=
+        (range.width+range.height)/2;
+
+        document.getElementById("uncertaintyRange")
+        .textContent=
+        `±${Math.round(averageSpread/2)} blocks`;
+
+    }
+
+
+    /* =====================
+       RESIDUAL ERROR
+    ===================== */
+
+    let error=0;
+
+    for(const r of readings){
+
+        const d=
+        direction(r.bearing);
+
+        const vx=
+        base.x-r.x;
+
+        const vz=
+        base.z-r.z;
+
+        error+=
+        Math.abs(
+            d.dx*vz-
+            d.dz*vx
+        );
+
+    }
+
+    error/=readings.length;
+
+
+    /* =====================
+       ANGLE GEOMETRY
+    ===================== */
+
+    const smallestAngle=
+    getGeometryQuality(readings);
+
+
+    let quality;
+
+    if(
+        smallestAngle>=60 &&
+        error<5
+    ){
+
+        quality="🟢 High";
+
+    }
+    else if(
+        smallestAngle>=30 &&
+        error<15
+    ){
+
+        quality="🟡 Medium";
+
+    }
+    else{
+
+        quality="🔴 Low";
+
+    }
+
+
+    status.innerHTML=
+    `<b>Confidence: ${quality}</b>
+    • Average line error: ${error.toFixed(1)} blocks
+    • Closest bearing separation: ${smallestAngle.toFixed(1)}°
+    • Angle uncertainty: ±${uncertainty}°
+    • ${readings.length} readings`;
+
+
+    /* =====================
+       WARNINGS
+    ===================== */
+
+    let warningHTML="";
+
+
+    if(smallestAngle<15){
+
+        warningHTML+=`
+        <div class="warning">
+            ⚠️ <b>Very nearly parallel.</b>
+            Small compass-angle errors can cause very large coordinate
+            errors. Take another reading from a different direction.
+        </div>
+        `;
+
+    }
+    else if(smallestAngle<30){
+
+        warningHTML+=`
+        <div class="warning">
+            ⚠️ <b>Bearings are somewhat close together.</b>
+            The result may move significantly if the angle measurements
+            are inaccurate.
+        </div>
+        `;
+
+    }
+
+
+    if(readings.length===2){
+
+        warningHTML+=`
+        <div class="warning">
+            ℹ️ <b>Only 2 readings:</b>
+            the calculator can find their mathematical intersection,
+            but it cannot determine whether one of the two compass
+            measurements is wrong. Use 3–5 readings for verification.
+        </div>
+        `;
+
+    }
+    else if(readings.length>=3 && error>20){
+
+        warningHTML+=`
+        <div class="warning">
+            ⚠️ <b>Readings disagree.</b>
+            Your compass measurements do not intersect closely.
+            Check the lodestone coordinates and compass angles.
+        </div>
+        `;
+
+    }
+    else if(readings.length>=3){
+
+        warningHTML+=`
+        <div class="warning good">
+            ✓ <b>Multiple readings available.</b>
+            The extra readings provide a consistency check on the
+            estimated location.
+        </div>
+        `;
+
+    }
+
+
+    warnings.innerHTML=
+    warningHTML;
+
+
+    drawMap(readings,base);
+
+}
+
+
+/* =========================
+   RESET
+========================= */
+
+function resetAll(){
+
+    document.getElementById("readings").innerHTML="";
+
+    readingCount=0;
+
+    addReading();
+    addReading();
+
+    document.getElementById("result")
+    .textContent="—";
+
+    document.getElementById("status")
+    .textContent=
+    "Add at least 2 readings.";
+
+    document.getElementById("rangeBox")
+    .style.display="none";
+
+    document.getElementById("warnings")
+    .innerHTML="";
+
+    drawMap([],null);
+
+}
+
+
+/* =========================
+   COMPASS PREVIEW
+========================= */
+
+function updateCompass(){
+
+    let angle=
+    parseFloat(
+        document.getElementById("previewAngle").value
+    );
+
+    if(!Number.isFinite(angle))
+        angle=0;
+
+    angle=
+    ((angle%360)+360)%360;
+
+    document.getElementById("needle")
+    .style.transform=
+    `translate(-50%,-100%) rotate(${angle}deg)`;
+
+    document.getElementById("angleDisplay")
+    .textContent=
+    `${angle.toFixed(1)}°`;
+
+}
+
+
+/* =========================
+   MAP
+========================= */
+
+function drawMap(readings,base){
+
+    const canvas=
+    document.getElementById("map");
+
+    const ctx=
+    canvas.getContext("2d");
+
+    ctx.clearRect(
+        0,
+        0,
+        canvas.width,
+        canvas.height
+    );
+
+
+    if(readings.length===0)
+        return;
+
+
+    const points=
+    readings.map(r=>({
+        x:r.x,
+        z:r.z
+    }));
+
+
+    if(base)
+        points.push(base);
+
+
+    let minX=
+    Math.min(...points.map(p=>p.x));
+
+    let maxX=
+    Math.max(...points.map(p=>p.x));
+
+    let minZ=
+    Math.min(...points.map(p=>p.z));
+
+    let maxZ=
+    Math.max(...points.map(p=>p.z));
+
+
+    let range=
+    Math.max(
+        maxX-minX,
+        maxZ-minZ,
+        100
+    );
+
+
+    const padding=
+    range*0.3;
+
+    minX-=padding;
+    maxX+=padding;
+    minZ-=padding;
+    maxZ+=padding;
+
+
+    const sx=x=>
+    (x-minX)/
+    (maxX-minX)*
+    canvas.width;
+
+    const sy=z=>
+    (z-minZ)/
+    (maxZ-minZ)*
+    canvas.height;
+
+
+    /* GRID */
+
+    ctx.strokeStyle="#18222c";
+    ctx.lineWidth=1;
+
+    for(let i=0;i<=10;i++){
+
+        const x=
+        i*canvas.width/10;
+
+        const y=
+        i*canvas.height/10;
+
+
+        ctx.beginPath();
+        ctx.moveTo(x,0);
+        ctx.lineTo(x,canvas.height);
+        ctx.stroke();
+
+
+        ctx.beginPath();
+        ctx.moveTo(0,y);
+        ctx.lineTo(canvas.width,y);
+        ctx.stroke();
+
+    }
+
+
+    /* LINES */
+
+    readings.forEach((r,index)=>{
+
+        const d=
+        direction(r.bearing);
+
+        const length=
+        range*2;
+
+
+        ctx.strokeStyle="#718cff";
+        ctx.lineWidth=2;
+
+        ctx.beginPath();
+
+        ctx.moveTo(
+            sx(r.x),
+            sy(r.z)
+        );
+
+        ctx.lineTo(
+            sx(r.x+d.dx*length),
+            sy(r.z+d.dz*length)
+        );
+
+        ctx.stroke();
+
+
+        /* LODESTONE */
+
+        ctx.fillStyle="#ffffff";
+
+        ctx.beginPath();
+
+        ctx.arc(
+            sx(r.x),
+            sy(r.z),
+            6,
+            0,
+            Math.PI*2
+        );
+
+        ctx.fill();
+
+
+        ctx.fillStyle="#ffffff";
+
+        ctx.font="bold 13px Arial";
+
+        ctx.fillText(
+            `C${index+1}`,
+            sx(r.x)+9,
+            sy(r.z)-8
+        );
+
+    });
+
+
+    /* BASE */
+
+    if(base){
+
+        ctx.fillStyle="#55e69b";
+
+        ctx.beginPath();
+
+        ctx.arc(
+            sx(base.x),
+            sy(base.z),
+            9,
+            0,
+            Math.PI*2
+        );
+
+        ctx.fill();
+
+
+        ctx.fillStyle="#8fffc1";
+
+        ctx.font="bold 14px Arial";
+
+        ctx.fillText(
+            "ESTIMATED BASE",
+            sx(base.x)+13,
+            sy(base.z)-12
+        );
+
+    }
+
+}
+
+
+/* INITIAL READINGS */
+
+addReading();
+addReading();
+
+</script>
+
+</body>
+</html>
